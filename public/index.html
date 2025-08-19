@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LAN Chat</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      margin: 0; 
+      padding: 0; 
+      display: flex; 
+      flex-direction: column; 
+      height: 100vh; 
+      background: #f9f9f9; 
+    }
+
+    header {
+      background: #0078D7;
+      color: white;
+      padding: 12px;
+      text-align: center;
+      font-size: 1.2rem;
+    }
+
+    #chat {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      padding: 10px;
+      overflow: hidden;
+    }
+
+    #messages {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #messages li {
+      padding: 8px 12px;
+      border-radius: 12px;
+      margin: 4px;
+      max-width: 75%;
+      word-wrap: break-word;
+    }
+
+    .me {
+      background: #d1ffd1;
+      align-self: flex-end;
+      text-align: right;
+    }
+
+    .other {
+      background: #f1f1f1;
+      align-self: flex-start;
+      text-align: left;
+    }
+
+    .system {
+      background: transparent;
+      color: gray;
+      font-style: italic;
+      text-align: center;
+      align-self: center;
+    }
+
+    #form {
+      display: flex;
+      padding: 8px;
+      background: #fff;
+      border-top: 1px solid #ddd;
+    }
+
+    #input {
+      flex: 1;
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    button {
+      margin-left: 8px;
+      padding: 10px 16px;
+      font-size: 1rem;
+      background: #0078D7;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #005bb5;
+    }
+
+    /* 📱 Mobile optimization */
+    @media (max-width: 600px) {
+      header { font-size: 1rem; padding: 10px; }
+      #input { font-size: 0.9rem; }
+      button { padding: 8px 12px; font-size: 0.9rem; }
+      #messages li { font-size: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>💬 LAN Chat</header>
+  
+  <div id="chat">
+    <ul id="messages"></ul>
+    <form id="form">
+      <input id="input" autocomplete="off" placeholder="Type a message..." />
+      <button>Send</button>
+    </form>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const messages = document.getElementById('messages');
+
+    let nickname = prompt("Enter your nickname:") || "Anonymous";
+    socket.emit('set nickname', nickname);
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      if (input.value) {
+        socket.emit('chat message', { user: nickname, text: input.value });
+        input.value = '';
+      }
+    });
+
+    socket.on('chat message', function(msg) {
+      const item = document.createElement('li');
+      if (msg.user === "System") {
+        item.classList.add('system');
+        item.textContent = msg.text;
+      } else if (msg.user === nickname) {
+        item.classList.add('me');
+        item.textContent = `You: ${msg.text}`;
+      } else {
+        item.classList.add('other');
+        item.textContent = `${msg.user}: ${msg.text}`;
+      }
+      messages.appendChild(item);
+      messages.scrollTop = messages.scrollHeight;
+    });
+  </script>
+</body>
+</html>
